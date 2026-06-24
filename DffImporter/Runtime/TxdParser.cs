@@ -40,8 +40,7 @@ namespace BfbbImport
             if (header.Type != RwChunk.TEXTURE_DICTIONARY)
                 throw new InvalidDataException($"Expected TEXTURE_DICTIONARY chunk, got 0x{header.Type:X4}.");
 
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in TEXTURE_DICTIONARY.");
+            long structEnd = r.ExpectStruct("TEXTURE_DICTIONARY");
             ushort numTextures = r.ReadUInt16();
             r.Seek(structEnd);
 
@@ -64,8 +63,7 @@ namespace BfbbImport
 
         private static (string name, Texture2D tex) ReadTextureNative(RwReader r, long texEnd)
         {
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in TEXTURE_NATIVE.");
+            long structEnd = r.ExpectStruct("TEXTURE_NATIVE");
 
             uint platformId = r.ReadUInt32();
             ushort filterAddressing = r.ReadUInt16();
@@ -128,8 +126,7 @@ namespace BfbbImport
                 palette = new Color32[palCount];
                 for (int p = 0; p < palCount; p++)
                 {
-                    byte pr = r.ReadByte(), pg = r.ReadByte(), pb = r.ReadByte(), pa = r.ReadByte();
-                    palette[p] = new Color32(pr, pg, pb, pa);
+                    palette[p] = r.ReadColor32();
                 }
             }
 
@@ -215,9 +212,9 @@ namespace BfbbImport
                 for (int i = 0; i < n; i++)
                 {
                     ushort px = (ushort)(data[i * 2] | (data[i * 2 + 1] << 8));
-                    outPixels[i] = baseFmt == FMT_4444 ? Unpack4444(px)
-                                   : baseFmt == FMT_565 ? Unpack565(px)
-                                   : Unpack1555(px);
+                    outPixels[i] = baseFmt == FMT_4444 ? ColorUtils.Unpack4444(px)
+                                   : baseFmt == FMT_565 ? ColorUtils.Unpack565(px)
+                                   : ColorUtils.Unpack1555(px);
                 }
             }
             else
@@ -226,30 +223,5 @@ namespace BfbbImport
             }
         }
 
-        private static Color32 Unpack1555(ushort p)
-        {
-            byte a = (byte)(((p >> 15) & 0x1) * 255);
-            byte r = (byte)(((p >> 10) & 0x1F) * 255 / 31);
-            byte g = (byte)(((p >> 5) & 0x1F) * 255 / 31);
-            byte b = (byte)((p & 0x1F) * 255 / 31);
-            return new Color32(r, g, b, a);
-        }
-
-        private static Color32 Unpack565(ushort p)
-        {
-            byte r = (byte)(((p >> 11) & 0x1F) * 255 / 31);
-            byte g = (byte)(((p >> 5) & 0x3F) * 255 / 63);
-            byte b = (byte)((p & 0x1F) * 255 / 31);
-            return new Color32(r, g, b, 255);
-        }
-
-        private static Color32 Unpack4444(ushort p)
-        {
-            byte a = (byte)(((p >> 12) & 0xF) * 255 / 15);
-            byte r = (byte)(((p >> 8) & 0xF) * 255 / 15);
-            byte g = (byte)(((p >> 4) & 0xF) * 255 / 15);
-            byte b = (byte)((p & 0xF) * 255 / 15);
-            return new Color32(r, g, b, a);
-        }
     }
 }

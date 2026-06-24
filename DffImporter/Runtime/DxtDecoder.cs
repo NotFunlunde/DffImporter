@@ -17,8 +17,8 @@ namespace BfbbImport
                 {
                     ushort c0 = (ushort)(data[offset] | (data[offset + 1] << 8));
                     ushort c1 = (ushort)(data[offset + 2] | (data[offset + 3] << 8));
-                    Color32 col0 = Rgb565(c0);
-                    Color32 col1 = Rgb565(c1);
+                    Color32 col0 = ColorUtils.Unpack565(c0);
+                    Color32 col1 = ColorUtils.Unpack565(c1);
                     bool transparentMode = c0 <= c1;
 
                     Color32[] palette = new Color32[4];
@@ -26,12 +26,12 @@ namespace BfbbImport
                     palette[1] = col1;
                     if (!transparentMode)
                     {
-                        palette[2] = Lerp(col0, col1, 1f / 3f);
-                        palette[3] = Lerp(col0, col1, 2f / 3f);
+                        palette[2] = ColorUtils.LerpColor(col0, col1, 1f / 3f);
+                        palette[3] = ColorUtils.LerpColor(col0, col1, 2f / 3f);
                     }
                     else
                     {
-                        palette[2] = Lerp(col0, col1, 0.5f);
+                        palette[2] = ColorUtils.LerpColor(col0, col1, 0.5f);
                         palette[3] = new Color32(0, 0, 0, 0);
                     }
 
@@ -69,13 +69,13 @@ namespace BfbbImport
 
                     ushort c0 = (ushort)(data[offset] | (data[offset + 1] << 8));
                     ushort c1 = (ushort)(data[offset + 2] | (data[offset + 3] << 8));
-                    Color32 col0 = Rgb565(c0);
-                    Color32 col1 = Rgb565(c1);
+                    Color32 col0 = ColorUtils.Unpack565(c0);
+                    Color32 col1 = ColorUtils.Unpack565(c1);
                     Color32[] palette = new Color32[4];
                     palette[0] = col0;
                     palette[1] = col1;
-                    palette[2] = Lerp(col0, col1, 1f / 3f);
-                    palette[3] = Lerp(col0, col1, 2f / 3f);
+                    palette[2] = ColorUtils.LerpColor(col0, col1, 1f / 3f);
+                    palette[3] = ColorUtils.LerpColor(col0, col1, 2f / 3f);
 
                     uint bits = (uint)(data[offset + 4] | (data[offset + 5] << 8) | (data[offset + 6] << 16) | (data[offset + 7] << 24));
                     offset += 8;
@@ -100,23 +100,6 @@ namespace BfbbImport
                     }
                 }
             }
-        }
-
-        private static Color32 Rgb565(ushort p)
-        {
-            byte r = (byte)(((p >> 11) & 0x1F) * 255 / 31);
-            byte g = (byte)(((p >> 5) & 0x3F) * 255 / 63);
-            byte b = (byte)((p & 0x1F) * 255 / 31);
-            return new Color32(r, g, b, 255);
-        }
-
-        private static Color32 Lerp(Color32 a, Color32 b, float t)
-        {
-            return new Color32(
-                (byte)(a.r + (b.r - a.r) * t),
-                (byte)(a.g + (b.g - a.g) * t),
-                (byte)(a.b + (b.b - a.b) * t),
-                255);
         }
     }
 }

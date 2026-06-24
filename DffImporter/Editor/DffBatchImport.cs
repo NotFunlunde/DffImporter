@@ -76,7 +76,7 @@ namespace BfbbImport.Editor
                 "Choose destination inside your project's Assets folder", Application.dataPath, "ImportedModels");
             if (string.IsNullOrEmpty(destFolder)) return;
 
-            if (!destFolder.Replace('\\', '/').StartsWith(Application.dataPath.Replace('\\', '/')))
+            if (!PathUtils.Normalize(destFolder).StartsWith(PathUtils.Normalize(Application.dataPath)))
             {
                 EditorUtility.DisplayDialog("BfBB DFF Batch Import",
                     "The destination must be inside this project's Assets folder.", "OK");
@@ -110,14 +110,7 @@ namespace BfbbImport.Editor
             AssetDatabase.Refresh(); // triggers import for every newly-copied .dff via DffImporter
 
             Debug.Log($"[DffImporter] Copied {copied} file(s) (.dff/.txd) into " +
-                      $"'{ToAssetsRelativePath(destFolder)}' and triggered import.");
-        }
-
-        private static string ToAssetsRelativePath(string absolutePath)
-        {
-            string dataPath = Application.dataPath.Replace('\\', '/');
-            string norm = absolutePath.Replace('\\', '/');
-            return norm.StartsWith(dataPath) ? "Assets" + norm.Substring(dataPath.Length) : norm;
+                      $"'{PathUtils.ToAssetsRelative(destFolder)}' and triggered import.");
         }
     }
 }

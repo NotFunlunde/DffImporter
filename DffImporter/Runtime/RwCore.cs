@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace BfbbImport
 {
@@ -97,6 +98,37 @@ namespace BfbbImport
             int end = Array.IndexOf(bytes, (byte)0);
             if (end < 0) end = bytes.Length;
             return Encoding.ASCII.GetString(bytes, 0, end);
+        }
+
+        /// <summary>Reads a STRUCT chunk header, validates its type, and returns the absolute
+        /// stream offset where its body ends. Throws if the chunk is not STRUCT.</summary>
+        public long ExpectStruct(string parentName)
+        {
+            long end = ReadChunkHeader(out var h);
+            if (h.Type != RwChunk.STRUCT)
+                throw new InvalidDataException($"Expected STRUCT in {parentName}.");
+            return end;
+        }
+
+        /// <summary>Reads four bytes (R, G, B, A) and returns a Color32.</summary>
+        public Color32 ReadColor32()
+        {
+            byte cr = ReadByte(), cg = ReadByte(), cb = ReadByte(), ca = ReadByte();
+            return new Color32(cr, cg, cb, ca);
+        }
+
+        /// <summary>Scans sibling chunks from the current position until one of the given
+        /// <paramref name="type"/> is found. Leaves the reader at the start of that chunk's body
+        /// and returns the absolute offset where the chunk's body ends.</summary>
+        public long FindChunk(long sectionEnd, uint type)
+        {
+            while (Position < sectionEnd)
+            {
+                long chunkEnd = ReadChunkHeader(out var h);
+                if (h.Type == type) return chunkEnd;
+                Seek(chunkEnd);
+            }
+            throw new InvalidDataException($"Expected chunk 0x{type:X4} but reached end of section.");
         }
 
         public void Dispose() => BR.Dispose();

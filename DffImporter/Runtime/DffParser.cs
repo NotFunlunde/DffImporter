@@ -30,23 +30,21 @@ namespace BfbbImport
 
             var clump = new RwClump();
 
-            long structEnd = r.ReadChunkHeader(out var structHeader);
-            if (structHeader.Type != RwChunk.STRUCT)
-                throw new InvalidDataException("Expected STRUCT inside CLUMP.");
+            long structEnd = r.ExpectStruct("CLUMP");
             int numAtomics = r.ReadInt32();
             r.Seek(structEnd); // skip numLights/numCameras if present — not needed for import
 
-            long flEnd = FindChunk(r, clumpEnd, RwChunk.FRAME_LIST);
+            long flEnd = r.FindChunk(clumpEnd, RwChunk.FRAME_LIST);
             ReadFrameList(r, flEnd, clump);
             r.Seek(flEnd);
 
-            long glEnd = FindChunk(r, clumpEnd, RwChunk.GEOMETRY_LIST);
+            long glEnd = r.FindChunk(clumpEnd, RwChunk.GEOMETRY_LIST);
             ReadGeometryList(r, glEnd, clump);
             r.Seek(glEnd);
 
             for (int i = 0; i < numAtomics; i++)
             {
-                long atEnd = FindChunk(r, clumpEnd, RwChunk.ATOMIC);
+                long atEnd = r.FindChunk(clumpEnd, RwChunk.ATOMIC);
                 clump.Atomics.Add(ReadAtomic(r, atEnd));
                 r.Seek(atEnd);
             }
@@ -55,28 +53,11 @@ namespace BfbbImport
             return clump;
         }
 
-        // --- low-level helpers -------------------------------------------------
-
-        /// <summary>Scans sibling chunks starting at the current position until one of type
-        /// <paramref name="type"/> is found. Leaves the reader at the start of that chunk's body
-        /// and returns the absolute offset where that chunk's body ends.</summary>
-        private static long FindChunk(RwReader r, long sectionEnd, uint type)
-        {
-            while (r.Position < sectionEnd)
-            {
-                long chunkEnd = r.ReadChunkHeader(out var h);
-                if (h.Type == type) return chunkEnd;
-                r.Seek(chunkEnd);
-            }
-            throw new InvalidDataException($"Expected chunk 0x{type:X4} but reached end of section.");
-        }
-
         // --- frame list ---------------------------------------------------------
 
         private static void ReadFrameList(RwReader r, long listEnd, RwClump clump)
         {
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in FRAME_LIST.");
+            long structEnd = r.ExpectStruct("FRAME_LIST");
             int numFrames = r.ReadInt32();
 
             for (int i = 0; i < numFrames; i++)
@@ -134,8 +115,7 @@ namespace BfbbImport
 
         private static void ReadGeometryList(RwReader r, long listEnd, RwClump clump)
         {
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in GEOMETRY_LIST.");
+            long structEnd = r.ExpectStruct("GEOMETRY_LIST");
             int numGeometries = r.ReadInt32();
             r.Seek(structEnd);
 
@@ -158,8 +138,7 @@ namespace BfbbImport
         {
             var g = new RwGeometry();
 
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in GEOMETRY.");
+            long structEnd = r.ExpectStruct("GEOMETRY");
 
             uint flags = r.ReadUInt32();
             g.Flags = flags;
@@ -181,10 +160,7 @@ namespace BfbbImport
                 {
                     g.PrelitColors = new Color32[numVertices];
                     for (int v = 0; v < numVertices; v++)
-                    {
-                        byte cr = r.ReadByte(), cg = r.ReadByte(), cb = r.ReadByte(), ca = r.ReadByte();
-                        g.PrelitColors[v] = new Color32(cr, cg, cb, ca);
-                    }
+                        g.PrelitColors[v] = r.ReadColor32();
                 }
 
                 for (int t = 0; t < numTexSets; t++)
@@ -252,7 +228,7 @@ namespace BfbbImport
                                   "please report these exact numbers if you see this.");
             }
             r.Seek(structEnd);
-            long matListEnd = FindChunk(r, geomEnd, RwChunk.MATERIAL_LIST);
+            long matListEnd = r.FindChunk(geomEnd, RwChunk.MATERIAL_LIST);
             ReadMaterialList(r, matListEnd, g);
             r.Seek(matListEnd);
 
@@ -271,8 +247,7 @@ namespace BfbbImport
 
         private static void ReadMaterialList(RwReader r, long listEnd, RwGeometry g)
         {
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in MATERIAL_LIST.");
+            long structEnd = r.ExpectStruct("MATERIAL_LIST");
             int numMaterials = r.ReadInt32();
             var sharedIndices = new int[numMaterials];
             for (int i = 0; i < numMaterials; i++) sharedIndices[i] = r.ReadInt32();
@@ -296,12 +271,10 @@ namespace BfbbImport
         {
             var mat = new RwMaterial();
 
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in MATERIAL.");
+            long structEnd = r.ExpectStruct("MATERIAL");
 
             r.ReadUInt32(); // flags, unused
-            byte cr = r.ReadByte(), cg = r.ReadByte(), cb = r.ReadByte(), ca = r.ReadByte();
-            mat.Color = new Color32(cr, cg, cb, ca);
+            mat.Color = r.ReadColor32();
             r.ReadInt32(); // unused
             int isTextured = r.ReadInt32();
             r.ReadFloat(); r.ReadFloat(); r.ReadFloat(); // ambient, specular, diffuse
@@ -309,7 +282,7 @@ namespace BfbbImport
 
             if (isTextured != 0)
             {
-                long texEnd = FindChunk(r, matEnd, RwChunk.TEXTURE);
+                long texEnd = r.FindChunk(matEnd, RwChunk.TEXTURE);
                 ReadTextureChunk(r, texEnd, mat);
                 r.Seek(texEnd);
             }
@@ -319,8 +292,7 @@ namespace BfbbImport
 
         private static void ReadTextureChunk(RwReader r, long texEnd, RwMaterial mat)
         {
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in TEXTURE.");
+            long structEnd = r.ExpectStruct("TEXTURE");
             r.ReadUInt32(); // filter/addressing mode, not needed for import
             r.Seek(structEnd);
 
@@ -383,8 +355,7 @@ namespace BfbbImport
 
         private static RwAtomic ReadAtomic(RwReader r, long atomicEnd)
         {
-            long structEnd = r.ReadChunkHeader(out var sh);
-            if (sh.Type != RwChunk.STRUCT) throw new InvalidDataException("Expected STRUCT in ATOMIC.");
+            long structEnd = r.ExpectStruct("ATOMIC");
 
             var a = new RwAtomic
             {

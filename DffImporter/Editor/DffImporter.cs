@@ -133,14 +133,14 @@ namespace BfbbImport.Editor
             // Prefer a same-named .txd, but also pick up any other .txd in the same folder
             // (BfBB sometimes shares one dictionary across several models in a level).
             var candidates = new List<string>();
-            string sameNamed = Path.Combine(dir, baseName + ".txd").Replace('\\', '/');
+            string sameNamed = PathUtils.Normalize(Path.Combine(dir, baseName + ".txd"));
             if (File.Exists(sameNamed)) candidates.Add(sameNamed);
 
             if (Directory.Exists(dir))
             {
                 foreach (var f in Directory.GetFiles(dir, "*.txd"))
                 {
-                    string norm = f.Replace('\\', '/');
+                    string norm = PathUtils.Normalize(f);
                     if (!candidates.Contains(norm)) candidates.Add(norm);
                 }
             }
