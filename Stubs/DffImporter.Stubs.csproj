@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>BfbbImport</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Include Runtime source files (excluding ClumpBuilder which needs deep Unity APIs) -->
+  <ItemGroup>
+    <Compile Include="..\Runtime\RwCore.cs" Link="Runtime\RwCore.cs" />
+    <Compile Include="..\Runtime\RwModel.cs" Link="Runtime\RwModel.cs" />
+    <Compile Include="..\Runtime\DffParser.cs" Link="Runtime\DffParser.cs" />
+    <Compile Include="..\Runtime\TxdParser.cs" Link="Runtime\TxdParser.cs" />
+    <Compile Include="..\Runtime\DxtDecoder.cs" Link="Runtime\DxtDecoder.cs" />
+    <Compile Include="..\Runtime\XboxUnswizzle.cs" Link="Runtime\XboxUnswizzle.cs" />
+  </ItemGroup>
+
+</Project>

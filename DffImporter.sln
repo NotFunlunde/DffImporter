@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DffImporter.Stubs", "Stubs\DffImporter.Stubs.csproj", "{D8FE23C7-0AFF-4C4D-AD66-CA9A8A062859}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DffImporter.Tests", "Tests\DffImporter.Tests.csproj", "{4803BF18-6798-4DF8-8359-465165617E05}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8FE23C7-0AFF-4C4D-AD66-CA9A8A062859}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8FE23C7-0AFF-4C4D-AD66-CA9A8A062859}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8FE23C7-0AFF-4C4D-AD66-CA9A8A062859}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8FE23C7-0AFF-4C4D-AD66-CA9A8A062859}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4803BF18-6798-4DF8-8359-465165617E05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4803BF18-6798-4DF8-8359-465165617E05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4803BF18-6798-4DF8-8359-465165617E05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4803BF18-6798-4DF8-8359-465165617E05}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
